@@ -1,0 +1,23 @@
+# 敏感 / 本地
+.env
+.env.*
+*.local
+mcp_probe_result.json
+tools/mcp_probe_result.json
+pip_install*.log
+
+# 依赖 / 构建
+node_modules/
+dist/
+.workbuddy/
+
+# 原始素材归档（1024 大图，仓库只保留 public/ 下的 512 压缩版）
+assets/**/*.png
+.vite/
+.vercel/
+.wrangler/
+
+# 系统
+.DS_Store
+Thumbs.db
+*.log

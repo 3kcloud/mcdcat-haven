@@ -1,0 +1,21 @@
+{
+  "name": "mcdcat-haven",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "麦麦猫屋 McdCat Haven — 麦当劳主题领养流浪猫公益养成 H5（2026 麦当劳程序员创意开发大赛参赛作品）",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@esbuild/win32-x64": "^0.21.5",
+    "@rollup/rollup-win32-x64-msvc": "^4.64.5",
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}
