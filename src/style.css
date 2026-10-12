@@ -341,6 +341,74 @@ button:not(:disabled):active { transform: scale(.955); }
 .ft { text-align: center; font-size: 11px; color: #B5A79A; margin-top: 16px; }
 .ft a { color: #8A7A6B; }
 
+/* ========== 麦当劳视觉元素 ==========
+ * 合规策略：只用「品牌红黄配色 + 通用餐饮 emoji」营造联想，
+ * 不临摹金色拱门 M 图形（该图形为注册商标），不使用「官方」字样。
+ */
+
+/* 背景：缓慢上浮的餐点图标，极低透明度，只做氛围不抢内容 */
+/* 页面底纹：极淡斜条纹，呼应快餐包装质感 */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 199, 44, .055) 0 18px,
+    rgba(255, 199, 44, 0) 18px 40px
+  );
+}
+
+.mcd-bg {
+  position: fixed; top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 520px; height: 100%;
+  pointer-events: none; overflow: hidden; z-index: 0;
+}
+@keyframes mcdFloatUp {
+  0%   { transform: translateY(106vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: .1; }
+  86%  { opacity: .06; }
+  100% { transform: translateY(-14vh) rotate(26deg); opacity: 0; }
+}
+.mcd-float {
+  position: absolute; bottom: 0;
+  animation-name: mcdFloatUp;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+/* 内容层压在漂浮背景之上 */
+#app { position: relative; z-index: 1; }
+
+/* 红黄条纹装饰（餐饮业通用纹样） */
+.mcd-stripe {
+  display: block; height: 5px; border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #DA291C 0 14px, #FFC72C 14px 28px);
+  opacity: .8; margin-bottom: 9px;
+}
+
+/* 成就卡四角餐点装饰 */
+.ach-card { overflow: hidden; }
+.mcd-corner {
+  position: absolute; font-size: 19px; opacity: .28;
+  font-style: normal; line-height: 1; pointer-events: none;
+}
+.mcd-corner.tl { top: 12px; left: 13px; }
+.mcd-corner.tr { top: 12px; right: 13px; }
+.mcd-corner.bl { bottom: 13px; left: 13px; }
+.mcd-corner.br { bottom: 13px; right: 13px; }
+
+/* 成就卡 ribbon：品牌红金渐变 */
+.ach-ribbon {
+  background: linear-gradient(135deg, #E8332A, #DA291C);
+  box-shadow: 0 3px 9px rgba(218, 41, 28, .3);
+}
+
+/* 无障碍：减少动效时隐藏漂浮背景 */
+@media (prefers-reduced-motion: reduce) {
+  .mcd-bg { display: none; }
+}
+
 /* ========== 无障碍：减少动效 ========== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
