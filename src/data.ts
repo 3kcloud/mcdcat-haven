@@ -12,6 +12,7 @@ export interface Cat {
   id: string;
   name: string;
   mcd: string; // 麦当劳特色关联
+  icon: string; // 关联餐点图标（通用 emoji，非商标）
   story: string; // 流浪身世
   traits: string; // 特征锚定词（防跨阶段换脸）
   color: string; // 主题色
@@ -32,6 +33,7 @@ export const CATS: Cat[] = [
     id: 'xiaoju',
     name: '小橘',
     mcd: '薯条',
+    icon: '🍟',
     story: '在后巷一个被雨水泡软的纸箱里被发现，瘦得能看见肋骨，却仍把纸箱让给了一只更小的奶猫。',
     traits: '橘色虎斑，毛蓬松如炸薯条，浅金橙色',
     color: '#E8A23D',
@@ -46,6 +48,7 @@ export const CATS: Cat[] = [
     id: 'naixi',
     name: '奶昔',
     mcd: '麦旋风',
+    icon: '🍦',
     story: '冬天蜷在空调外机旁取暖的小奶猫，被发现时冻得发抖，却把唯一的暖 spot 让给了后来的同伴。',
     traits: '纯白卷毛，蓝眼睛，毛量蓬松软糯',
     color: '#CFE3F2',
@@ -60,6 +63,7 @@ export const CATS: Cat[] = [
     id: 'zhima',
     name: '芝麻',
     mcd: '巨无霸',
+    icon: '🍔',
     story: '在快餐店后巷的垃圾桶旁长大，靠翻找被人们遗弃的食物活下来，却从不对人哈气。',
     traits: '狸花斑纹，脸有芝麻状斑点，圆脸健壮',
     color: '#9B8579',
@@ -74,6 +78,7 @@ export const CATS: Cat[] = [
     id: 'tuanzi',
     name: '团子',
     mcd: '麦乐鸡',
+    icon: '🍗',
     story: '被前主人弃养时瘦骨嶙峋，蜷起来像一颗冷掉的小饭团。被人捡到时，它第一反应是蹭手心。',
     traits: '棕虎斑短毛，圆胖身形，蜷缩如麦乐鸡',
     color: '#D89B5A',
@@ -88,6 +93,7 @@ export const CATS: Cat[] = [
     id: 'xuanmi',
     name: '玄米',
     mcd: '可乐',
+    icon: '🥤',
     story: '一身乌黑油亮，因曾被伤害而极度怕人，躲在车底整整一周，只敢在深夜溜出来喝水。',
     traits: '纯黑短毛，油亮如可乐，金眼睛，纤细耳大',
     color: '#3A3A3A',
@@ -102,6 +108,7 @@ export const CATS: Cat[] = [
     id: 'yuyuan',
     name: '芋圆',
     mcd: '香芋派',
+    icon: '🥧',
     story: '一只流浪猫妈妈留下的孩子，被 rescued 时还睁不开眼，如今是最爱撒娇的那一个。',
     traits: '淡紫灰色（丁香色系），圆亮大眼，干净小巧',
     color: '#C9B6D6',
