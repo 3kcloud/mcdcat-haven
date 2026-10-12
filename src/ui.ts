@@ -5,6 +5,7 @@ import type { Cat } from './data';
 import type { GameState } from './logic';
 import { getTitle, today, demoOrderTotal } from './logic';
 import * as A from './anim';
+import * as M from './motion';
 import * as Ach from './achievements';
 
 // ⚠️ 仓库短链：分享卡转化的唯一桥梁
@@ -57,7 +58,7 @@ export function renderHome(s: GameState): string {
         : '<span class="badge new">等待领养</span>';
 
     return `<div class="cat" data-id="${c.id}" style="--c:${c.color};--d:${(i * 0.33).toFixed(2)}s">
-      <span class="cat-img-wrap"><img src="${cur.img}" alt="${esc(c.name)}" loading="lazy" /></span>
+      <span class="cat-img-wrap"><span class="cat-body"><img src="${cur.img}" alt="${esc(c.name)}" loading="lazy" /></span></span>
       <div class="nm">${esc(c.name)}<span class="tag">${esc(c.mcd)}</span></div>
       ${badge}
       <div class="st">${esc(c.story)}</div>
@@ -109,9 +110,16 @@ export function renderCat(s: GameState, id: string): string {
     ${renderTopBar(s)}
     <div class="detail" style="--c:${c.color}">
       <div class="stage-badge" id="stage-badge">阶段 ${p.stage} · ${cur.name}</div>
-      <div class="big-wrap">
+      <div class="big-wrap" id="big-wrap">
+        <i class="cat-shadow"></i>
         <div class="bubble" id="bubble"></div>
-        <img id="cat-img" class="big" src="${cur.img}" alt="${esc(c.name)} ${cur.name}" />
+        <div class="cat-actor" id="cat-actor">
+          <div class="cat-body js-ctrl" id="cat-body">
+            <div class="cat-breathe" id="cat-breathe">
+              <img id="cat-img" class="big" src="${cur.img}" alt="${esc(c.name)} ${cur.name}" />
+            </div>
+          </div>
+        </div>
       </div>
       <p class="desc" id="desc">${esc(cur.desc)}</p>
       <div class="stages" id="stages">${dotsHtml(s, id)}</div>
@@ -176,6 +184,8 @@ export function syncCatView(s: GameState, id: string, updateTop = true): void {
 
   const img = document.getElementById('cat-img') as HTMLImageElement | null;
   if (img) {
+    // 常驻姿态：有粮 = 坐姿精神；无粮 = 趴在地上（无精打采）
+    M.setPose(img, s.kibble >= CONFIG.PER_FEED ? 'sit' : 'lie');
     const want = new URL(cur.img, location.href).href;
     if (img.src !== want) {
       img.classList.add('fade-out');
