@@ -68,21 +68,46 @@ body {
 }
 .cat:hover { border-color: var(--c); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.09); }
 
-/* 猫咪待机：外层呼吸起伏，内层偶尔歪头 —— 让静态图"活"起来 */
+/* 猫咪待机：四层分离（呼吸 / 摇尾 / 歪头），让静态立绘"活"起来
+ * 结构：.cat-actor > .cat-body > .cat-breathe > img
+ */
 @keyframes catIdle {
   0%, 100% { transform: translateY(0) scale(1); }
   50%      { transform: translateY(-5px) scale(1.025); }
+}
+@keyframes catWag {
+  0%, 74%, 100% { transform: rotate(0deg); }
+  80%           { transform: rotate(-3deg); }
+  86%           { transform: rotate(2.4deg); }
+  92%           { transform: rotate(-1.2deg); }
 }
 @keyframes catTilt {
   0%, 88%, 100% { transform: rotate(0deg); }
   92%           { transform: rotate(-2.5deg); }
   96%           { transform: rotate(2deg); }
 }
+
+/* 首页卡片：整层呼吸 */
 .cat-img-wrap {
   display: block;
   animation: catIdle 3.4s ease-in-out infinite;
   animation-delay: var(--d, 0s);
 }
+/* 摇尾巴：绕臀部原点摆动（首页常驻，详情页交给 JS） */
+.cat-body {
+  display: block;
+  transform-origin: 58% 92%;
+  transition: transform .8s cubic-bezier(.2, .8, .3, 1);
+  animation: catWag 5.6s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+/* 常驻姿态：趴在地上（猫粮不足 / 无精打采） */
+.cat-body.lying {
+  transform: scaleY(.78) scaleX(1.12) translateY(8%);
+}
+/* 详情页由 JS 编排动作，禁用 CSS 待机摇尾以免打架 */
+.cat-body.js-ctrl { animation: none; }
+
 .cat img {
   display: block;
   width: 100%;
@@ -91,6 +116,26 @@ body {
   animation: catTilt 7.2s ease-in-out infinite;
   animation-delay: var(--d, 0s);
 }
+
+/* 呼吸层：常驻循环；播放动作时加 .paused 暂停 */
+.cat-breathe {
+  display: block;
+  animation: catIdle 3.8s ease-in-out infinite;
+}
+.cat-breathe.paused { animation-play-state: paused; }
+
+/* 地面阴影：随姿态变化，增强落地感 */
+.cat-shadow {
+  position: absolute; left: 50%; bottom: 0;
+  width: 132px; height: 16px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(150, 120, 85, .3), rgba(150, 120, 85, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: width .5s ease, height .5s ease, opacity .5s ease;
+}
+.big-wrap.is-lying .cat-shadow { width: 164px; height: 19px; opacity: .95; }
+
 .cat:hover .cat-img-wrap { animation-duration: 1.9s; }
 
 .nm { font-size: 15px; font-weight: 600; margin-top: 6px; }
@@ -112,11 +157,11 @@ body {
 
 .big-wrap {
   position: relative; display: inline-block;
-  animation: catIdle 3.8s ease-in-out infinite;
+  padding-bottom: 14px;
 }
 .big {
   display: block; width: 200px; height: 200px; object-fit: contain;
-  animation: catTilt 8s ease-in-out infinite;
+  transform-origin: 50% 82%;
   transition: opacity .19s ease;
   cursor: pointer;
 }
