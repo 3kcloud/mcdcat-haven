@@ -7,6 +7,7 @@ import { getTitle, today, demoOrderTotal } from './logic';
 import * as A from './anim';
 import * as M from './motion';
 import * as Ach from './achievements';
+import { ICON, BTN_ICON, stripeTag } from './deco';
 
 // ⚠️ 仓库短链：分享卡转化的唯一桥梁
 export const REPO_URL = 'https://github.com/3kcloud/mcdcat-haven';
@@ -20,9 +21,9 @@ function esc(s: string): string {
 export function renderTopBar(s: GameState): string {
   const t = getTitle(s.kibbleTotal);
   return `<div class="bar" id="bar">
-    <span>猫粮 <b id="kibble-val">${s.kibble}g</b></span>
-    <span>可投喂 <b id="feeds-val">${Math.floor(s.kibble / CONFIG.PER_FEED)}</b> 次</span>
-    <span>称号 <b id="title-val">Lv.${t.lv} ${t.name}</b></span>
+    <span>${ICON.kibble} 猫粮 <b id="kibble-val">${s.kibble}g</b></span>
+    <span>${ICON.bowl} 可投喂 <b id="feeds-val">${Math.floor(s.kibble / CONFIG.PER_FEED)}</b> 次</span>
+    <span>${ICON.star} 称号 <b id="title-val">Lv.${t.lv} ${t.name}</b></span>
   </div>`;
 }
 
@@ -59,7 +60,7 @@ export function renderHome(s: GameState): string {
 
     return `<div class="cat" data-id="${c.id}" style="--c:${c.color};--d:${(i * 0.33).toFixed(2)}s">
       <span class="cat-img-wrap"><span class="cat-body"><img src="${cur.img}" alt="${esc(c.name)}" loading="lazy" /></span></span>
-      <div class="nm">${esc(c.name)}<span class="tag">${esc(c.mcd)}</span></div>
+      <div class="nm">${esc(c.name)}<span class="tag">${c.icon} ${esc(c.mcd)}</span></div>
       ${badge}
       <div class="st">${esc(c.story)}</div>
     </div>`;
@@ -79,7 +80,7 @@ export function renderHome(s: GameState): string {
     ${renderTopBar(s)}
     <div class="grid">${cards}</div>
     <div class="row" style="margin-top:12px">
-      <button class="ghost" id="ach">🏅 成就墙 ${got}/${total}</button>
+      <button class="ghost" id="ach">${BTN_ICON.ach} 成就墙 ${got}/${total}</button>
     </div>
     <footer class="ft">🐙 基于麦当劳 MCP 构建 · <a href="${REPO_URL}" target="_blank" rel="noopener">${REPO_URL.replace('https://github.com/', '')}</a></footer>`;
 }
@@ -105,7 +106,7 @@ export function renderCat(s: GameState, id: string): string {
 
   return `<header class="hd sm">
       <button class="ghost" id="back">← 猫屋</button>
-      <h1>${esc(c.name)}<span class="tag">${esc(c.mcd)}</span></h1>
+      <h1>${esc(c.name)}<span class="tag">${c.icon} ${esc(c.mcd)}</span></h1>
     </header>
     ${renderTopBar(s)}
     <div class="detail" style="--c:${c.color}">
@@ -126,21 +127,22 @@ export function renderCat(s: GameState, id: string): string {
       <div class="prog"><div class="fill" id="fill" style="width:${pct}%"></div></div>
       <div class="prog-t" id="prog-t">本阶段 ${p.feedsInStage}/${CONFIG.FEEDS_PER_STAGE} 次投喂</div>
       <button class="primary" id="feed" ${canFeed ? '' : 'disabled'}>
-        ${canFeed ? `投喂一次（-${CONFIG.PER_FEED}g）` : '猫粮不足'}
+        ${canFeed ? `${BTN_ICON.feed} 投喂一次（-${CONFIG.PER_FEED}g）` : '猫粮不足'}
       </button>
     </div>
 
     <div class="gain">
-      <h3>获取爱心猫粮</h3>
+      <h3>${ICON.kibble} 获取爱心猫粮</h3>
+      ${stripeTag()}
       <p class="hint">A 麦门主食：真实订单金额换算（¥1 = ${CONFIG.RATE}g）</p>
-      <button class="primary" id="order">🔗 授权并换算我的订单</button>
+      <button class="primary" id="order">${BTN_ICON.order} 授权并换算我的订单</button>
       <p class="hint">B 爱心任务：签到 / 浏览菜单 · 营养 · 活动（每日各一次）</p>
       <div class="row">
-        <button id="signin" ${canSigninBtn(s) ? '' : 'disabled'}>每日签到 +100g</button>
-        <button id="task" ${canTaskBtn(s) ? '' : 'disabled'}>爱心任务 +150g</button>
+        <button id="signin" ${canSigninBtn(s) ? '' : 'disabled'}>${BTN_ICON.signin} 每日签到 +100g</button>
+        <button id="task" ${canTaskBtn(s) ? '' : 'disabled'}>${BTN_ICON.task} 爱心任务 +150g</button>
       </div>
       <p class="hint">未授权也能完整体验：</p>
-      <button id="demo">演示模式（模拟 ¥${demoOrderTotal()} 订单）</button>
+      <button id="demo">${BTN_ICON.demo} 演示模式（模拟 ¥${demoOrderTotal()} 订单）</button>
     </div>
 
     <div class="notice sm">⚠️ 现实中请勿随意投喂人类食品给猫咪，科学喂养请咨询兽医。本作为童话设定。</div>`;
@@ -222,6 +224,7 @@ export function renderAchWall(s: GameState): string {
       <button class="ghost" id="back">← 猫屋</button>
       <h1>成就墙</h1>
     </header>
+    ${stripeTag()}
     <div class="notice sm">🏅 已解锁 <b>${got.size}</b> / ${all.length} 项成就</div>
     <div class="ach-grid">${items}</div>
     <footer class="ft">🐙 基于麦当劳 MCP 构建 · <a href="${REPO_URL}" target="_blank" rel="noopener">${REPO_URL.replace('https://github.com/', '')}</a></footer>`;
@@ -237,6 +240,10 @@ export function renderAchCard(a: Ach.Achievement, cat: Cat | undefined, s: GameS
   return `<div class="ach-modal-bg"></div>
     <div class="ach-card-wrap">
       <div id="ach-card" class="ach-card" style="--c:${cat ? cat.color : '#E8A23D'}">
+        <i class="mcd-corner tl" aria-hidden="true">${ICON.burger}</i>
+        <i class="mcd-corner tr" aria-hidden="true">${ICON.fries}</i>
+        <i class="mcd-corner bl" aria-hidden="true">${ICON.drink}</i>
+        <i class="mcd-corner br" aria-hidden="true">${ICON.sundae}</i>
         <div class="ach-ribbon">成 就 解 锁</div>
         <div class="ach-emoji">${a.emoji}</div>
         ${img ? `<div class="ach-cat"><img src="${img}" alt="" /></div>` : ''}
@@ -273,6 +280,7 @@ export function renderCert(s: GameState, id: string): string {
   const t = getTitle(s.kibbleTotal);
   return `<div class="cert-wrap">
     <div id="cert-card" class="cert" style="--c:${c.color}">
+      ${stripeTag()}
       <div class="cert-hd">领 养 证 书</div>
       <div class="ba">
         <div><img src="${c.stages[0].img}" /><span>相遇</span></div>
