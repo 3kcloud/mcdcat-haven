@@ -8,6 +8,7 @@ import * as L from './logic';
 import * as A from './anim';
 import * as M from './motion';
 import * as Ach from './achievements';
+import { mountFloatingBg } from './deco';
 import { CATS, CONFIG } from './data';
 import {
   renderHome,
@@ -333,5 +334,8 @@ document.addEventListener(
   },
   true
 );
+
+// 挂载麦当劳漂浮餐点背景（内部会尊重 prefers-reduced-motion 自动跳过）
+mountFloatingBg();
 
 render();
