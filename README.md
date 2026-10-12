@@ -4,7 +4,7 @@
 > 一个基于麦当劳 MCP 的领养流浪猫公益养成 H5 —— 2026 麦当劳程序员创意开发大赛参赛作品。
 
 🔗 **仓库**：https://github.com/3kcloud/mcdcat-haven
-🎮 **在线体验**：见下方「在线试玩」
+🎮 **在线体验**：https://mcdcat-haven.app.workbuddy.host/
 
 > 如果这个项目让你觉得「有点意思」，欢迎点个 ⭐ ——
 > 这是让更多流浪猫的故事被看见，最直接的方式。
@@ -112,7 +112,10 @@
 
 ## 六、在线试玩
 
-<!-- DEPLOY_URL -->
+🎮 **https://mcdcat-haven.app.workbuddy.host/**
+
+打开即玩，无需登录。未配置 MCP Token 时以**演示模式**运行（预置模拟订单），完整可玩；
+填入自己的 MCP Token 即可解锁**真实订单 → 猫粮换算**。
 
 > 未配置 MCP Token 时，游戏以**演示模式**运行（预置模拟订单），完整可玩。
 
