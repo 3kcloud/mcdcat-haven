@@ -18,6 +18,7 @@ export interface GameState {
   signinDay: string;
   taskDay: string;
   certDone: string[];
+  achievements: string[]; // 已解锁成就 id
 }
 
 const KEY = 'mcdcat_v1';
@@ -37,6 +38,7 @@ export function defaultState(): GameState {
     signinDay: '',
     taskDay: '',
     certDone: [],
+    achievements: [],
   };
 }
 
