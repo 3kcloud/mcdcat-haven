@@ -1,26 +1,52 @@
-// UI 层：渲染首页 / 猫详情 / 领养证书（返回 HTML 字符串）
+// UI 层：渲染首页 / 猫详情 / 成就墙 / 成就卡 / 领养证书
+// 约定：render* 负责产出骨架 HTML，sync* 负责"局部刷新"，避免全量重建 DOM 打断动画
 import { CATS, CONFIG, STAGE_NAMES } from './data';
+import type { Cat } from './data';
 import type { GameState } from './logic';
 import { getTitle, today, demoOrderTotal } from './logic';
+import * as A from './anim';
+import * as Ach from './achievements';
 
-// ⚠️ 仓库短链：分享卡转化的唯一桥梁。建仓后如仓库名不同，请改此处。
+// ⚠️ 仓库短链：分享卡转化的唯一桥梁
 export const REPO_URL = 'https://github.com/3kcloud/mcdcat-haven';
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
 }
 
+/* ---------- 顶部数值条 ---------- */
+
 export function renderTopBar(s: GameState): string {
   const t = getTitle(s.kibbleTotal);
-  return `<div class="bar">
-    <span>猫粮 <b>${s.kibble}g</b></span>
-    <span>可投喂 <b>${Math.floor(s.kibble / CONFIG.PER_FEED)}</b> 次</span>
-    <span>称号 <b>Lv.${t.lv} ${t.name}</b></span>
+  return `<div class="bar" id="bar">
+    <span>猫粮 <b id="kibble-val">${s.kibble}g</b></span>
+    <span>可投喂 <b id="feeds-val">${Math.floor(s.kibble / CONFIG.PER_FEED)}</b> 次</span>
+    <span>称号 <b id="title-val">Lv.${t.lv} ${t.name}</b></span>
   </div>`;
 }
 
+/** 局部刷新顶部数值；传入 prev 时做数字滚动 */
+export function updateTopBar(s: GameState, prev?: number): void {
+  const kv = document.getElementById('kibble-val');
+  const fv = document.getElementById('feeds-val');
+  const tv = document.getElementById('title-val');
+  const t = getTitle(s.kibbleTotal);
+
+  if (kv) {
+    if (typeof prev === 'number' && prev !== s.kibble) {
+      A.countUp(kv, prev, s.kibble, 800, 'g');
+    } else {
+      kv.textContent = `${s.kibble}g`;
+    }
+  }
+  if (fv) fv.textContent = String(Math.floor(s.kibble / CONFIG.PER_FEED));
+  if (tv) tv.textContent = `Lv.${t.lv} ${t.name}`;
+}
+
+/* ---------- 首页 ---------- */
+
 export function renderHome(s: GameState): string {
-  const cards = CATS.map((c) => {
+  const cards = CATS.map((c, i) => {
     const p = s.progress[c.id];
     const adopted = p?.adopted;
     const cur = p ? c.stages[p.stage - 1] : c.stages[0];
@@ -29,13 +55,17 @@ export function renderHome(s: GameState): string {
       : p
         ? `<span class="badge">阶段${p.stage}·${STAGE_NAMES[p.stage - 1]}</span>`
         : '<span class="badge new">等待领养</span>';
-    return `<div class="cat" data-id="${c.id}" style="--c:${c.color}">
-      <img src="${cur.img}" alt="${esc(c.name)}" loading="lazy" />
+
+    return `<div class="cat" data-id="${c.id}" style="--c:${c.color};--d:${(i * 0.33).toFixed(2)}s">
+      <span class="cat-img-wrap"><img src="${cur.img}" alt="${esc(c.name)}" loading="lazy" /></span>
       <div class="nm">${esc(c.name)}<span class="tag">${esc(c.mcd)}</span></div>
       ${badge}
       <div class="st">${esc(c.story)}</div>
     </div>`;
   }).join('');
+
+  const total = Ach.catalog().length;
+  const got = s.achievements.length;
 
   return `<header class="hd">
       <h1>麦麦猫屋</h1>
@@ -47,7 +77,22 @@ export function renderHome(s: GameState): string {
     </div>
     ${renderTopBar(s)}
     <div class="grid">${cards}</div>
+    <div class="row" style="margin-top:12px">
+      <button class="ghost" id="ach">🏅 成就墙 ${got}/${total}</button>
+    </div>
     <footer class="ft">🐙 基于麦当劳 MCP 构建 · <a href="${REPO_URL}" target="_blank" rel="noopener">${REPO_URL.replace('https://github.com/', '')}</a></footer>`;
+}
+
+/* ---------- 猫详情页 ---------- */
+
+function dotsHtml(s: GameState, id: string): string {
+  const p = s.progress[id];
+  const stage = p ? p.stage : 1;
+  const done = Ach.doneStages(s, id);
+  return STAGE_NAMES.map((n, i) => {
+    const cls = i < done ? 'done' : i + 1 === stage ? 'now' : '';
+    return `<span class="dot ${cls}">${n}</span>`;
+  }).join('<i>→</i>');
 }
 
 export function renderCat(s: GameState, id: string): string {
@@ -55,10 +100,6 @@ export function renderCat(s: GameState, id: string): string {
   const p = s.progress[id]!;
   const cur = c.stages[p.stage - 1];
   const pct = Math.min(100, (p.feedsInStage / CONFIG.FEEDS_PER_STAGE) * 100);
-  const dots = STAGE_NAMES.map((n, i) => {
-    const active = i + 1 < p.stage ? 'done' : i + 1 === p.stage ? 'now' : '';
-    return `<span class="dot ${active}">${n}</span>`;
-  }).join('<i>→</i>');
   const canFeed = s.kibble >= CONFIG.PER_FEED;
 
   return `<header class="hd sm">
@@ -67,12 +108,15 @@ export function renderCat(s: GameState, id: string): string {
     </header>
     ${renderTopBar(s)}
     <div class="detail" style="--c:${c.color}">
-      <div class="stage-badge">阶段 ${p.stage} · ${cur.name}</div>
-      <img class="big" src="${cur.img}" alt="${esc(c.name)} ${cur.name}" />
-      <p class="desc">${esc(cur.desc)}</p>
-      <div class="stages">${dots}</div>
-      <div class="prog"><div class="fill" style="width:${pct}%"></div></div>
-      <div class="prog-t">本阶段 ${p.feedsInStage}/${CONFIG.FEEDS_PER_STAGE} 次投喂</div>
+      <div class="stage-badge" id="stage-badge">阶段 ${p.stage} · ${cur.name}</div>
+      <div class="big-wrap">
+        <div class="bubble" id="bubble"></div>
+        <img id="cat-img" class="big" src="${cur.img}" alt="${esc(c.name)} ${cur.name}" />
+      </div>
+      <p class="desc" id="desc">${esc(cur.desc)}</p>
+      <div class="stages" id="stages">${dotsHtml(s, id)}</div>
+      <div class="prog"><div class="fill" id="fill" style="width:${pct}%"></div></div>
+      <div class="prog-t" id="prog-t">本阶段 ${p.feedsInStage}/${CONFIG.FEEDS_PER_STAGE} 次投喂</div>
       <button class="primary" id="feed" ${canFeed ? '' : 'disabled'}>
         ${canFeed ? `投喂一次（-${CONFIG.PER_FEED}g）` : '猫粮不足'}
       </button>
@@ -101,6 +145,118 @@ function canTaskBtn(s: GameState): boolean {
   return s.taskDay !== today();
 }
 
+/** 局部刷新详情页（保留 DOM，不打断动画） */
+export function syncCatView(s: GameState, id: string, updateTop = true): void {
+  const c = CATS.find((x) => x.id === id)!;
+  const p = s.progress[id]!;
+  const cur = c.stages[p.stage - 1];
+  const pct = Math.min(100, (p.feedsInStage / CONFIG.FEEDS_PER_STAGE) * 100);
+
+  const badge = document.getElementById('stage-badge');
+  if (badge) badge.textContent = `阶段 ${p.stage} · ${cur.name}`;
+
+  const desc = document.getElementById('desc');
+  if (desc) desc.textContent = cur.desc;
+
+  const stages = document.getElementById('stages');
+  if (stages) stages.innerHTML = dotsHtml(s, id);
+
+  const fill = document.getElementById('fill');
+  if (fill) fill.style.width = `${pct}%`;
+
+  const pt = document.getElementById('prog-t');
+  if (pt) pt.textContent = `本阶段 ${p.feedsInStage}/${CONFIG.FEEDS_PER_STAGE} 次投喂`;
+
+  const feed = document.getElementById('feed') as HTMLButtonElement | null;
+  if (feed) {
+    const can = s.kibble >= CONFIG.PER_FEED;
+    feed.disabled = !can;
+    feed.textContent = can ? `投喂一次（-${CONFIG.PER_FEED}g）` : '猫粮不足';
+  }
+
+  const img = document.getElementById('cat-img') as HTMLImageElement | null;
+  if (img) {
+    const want = new URL(cur.img, location.href).href;
+    if (img.src !== want) {
+      img.classList.add('fade-out');
+      window.setTimeout(() => {
+        img.src = cur.img;
+        img.classList.remove('fade-out');
+        img.classList.add('pop-in');
+        window.setTimeout(() => img.classList.remove('pop-in'), 560);
+      }, 190);
+    }
+  }
+
+  if (updateTop) updateTopBar(s);
+}
+
+/* ---------- 成就墙 ---------- */
+
+export function renderAchWall(s: GameState): string {
+  const all = Ach.catalog();
+  const got = new Set(s.achievements);
+
+  const items = all
+    .map((a) => {
+      const on = got.has(a.id);
+      return `<div class="ach-item${on ? '' : ' locked'}">
+        <div class="e">${on ? a.emoji : '🔒'}</div>
+        <div class="t">${esc(a.title)}</div>
+        <div class="s">${esc(on ? a.subtitle : a.how)}</div>
+      </div>`;
+    })
+    .join('');
+
+  return `<header class="hd sm">
+      <button class="ghost" id="back">← 猫屋</button>
+      <h1>成就墙</h1>
+    </header>
+    <div class="notice sm">🏅 已解锁 <b>${got.size}</b> / ${all.length} 项成就</div>
+    <div class="ach-grid">${items}</div>
+    <footer class="ft">🐙 基于麦当劳 MCP 构建 · <a href="${REPO_URL}" target="_blank" rel="noopener">${REPO_URL.replace('https://github.com/', '')}</a></footer>`;
+}
+
+/* ---------- 成就卡（可保存分享） ---------- */
+
+export function renderAchCard(a: Ach.Achievement, cat: Cat | undefined, s: GameState): string {
+  const t = getTitle(s.kibbleTotal);
+  const p = cat ? s.progress[cat.id] : undefined;
+  const img = cat ? c_stage_img(cat, p) : '';
+
+  return `<div class="ach-modal-bg"></div>
+    <div class="ach-card-wrap">
+      <div id="ach-card" class="ach-card" style="--c:${cat ? cat.color : '#E8A23D'}">
+        <div class="ach-ribbon">成 就 解 锁</div>
+        <div class="ach-emoji">${a.emoji}</div>
+        ${img ? `<div class="ach-cat"><img src="${img}" alt="" /></div>` : ''}
+        <h2>${esc(a.title)}</h2>
+        <p class="ach-sub">${esc(a.subtitle)}</p>
+        <div class="ach-meta">
+          爱心等级 Lv.${t.lv} · 称号：${esc(t.name)}${p ? ` · 累计投喂 ${p.totalFeeds} 次` : ''}
+        </div>
+        <p class="cert-note">爱心猫粮为游戏内虚拟数值，不代表任何真实捐赠或实物兑换</p>
+        <div class="cert-repo">🐙 基于麦当劳 MCP 构建<br/><a href="${REPO_URL}" target="_blank" rel="noopener">${REPO_URL}</a></div>
+      </div>
+      <div class="ach-actions">
+        <button class="primary" id="ach-save">保存成就卡</button>
+        <button class="ghost" id="ach-close">继续陪伴</button>
+      </div>
+    </div>`;
+}
+
+function c_stage_img(cat: Cat, p: { stage: number } | undefined): string {
+  const idx = Math.min(CONFIG.STAGES, Math.max(1, p ? p.stage : 1));
+  return cat_stage(cat, idx);
+}
+
+function cat_stage(cat: Cat, stage: number): string {
+  const s = cat.stages.find((x) => x.stage === stage);
+  return s ? s.img : cat.stages[0].img;
+}
+
+/* ---------- 领养证书 ---------- */
+
 export function renderCert(s: GameState, id: string): string {
   const c = CATS.find((x) => x.id === id)!;
   const p = s.progress[id]!;
@@ -114,7 +270,7 @@ export function renderCert(s: GameState, id: string): string {
         <div><img src="${c.stages[3].img}" /><span>新家</span></div>
       </div>
       <h2>${esc(c.name)} 找到了属于它的家</h2>
-      <p class="lv">爱心等级 Lv.${t.lv} · 称号：${t.name}</p>
+      <p class="lv">爱心等级 Lv.${t.lv} · 称号：${esc(t.name)}</p>
       <p class="meta">累计投喂 ${p.totalFeeds} 次 · 陪伴它走完 4 个阶段</p>
       <p class="cert-note">爱心猫粮为游戏内虚拟数值，不代表任何真实捐赠或实物兑换</p>
       <div class="cert-repo">🐙 基于麦当劳 MCP 构建<br/><a href="${REPO_URL}" target="_blank" rel="noopener">${REPO_URL}</a></div>
