@@ -6,6 +6,7 @@
 import './style.css';
 import * as L from './logic';
 import * as A from './anim';
+import * as M from './motion';
 import * as Ach from './achievements';
 import { CATS, CONFIG } from './data';
 import {
@@ -55,6 +56,8 @@ function go(r: string, id = ''): void {
 }
 
 function render(): void {
+  // 重建 DOM 前先停掉待机调度，避免旧引用残留
+  M.stopIdleLoop();
   if (route === 'cat') {
     app.innerHTML = renderCat(state, curCat);
     bindCat();
@@ -100,14 +103,10 @@ function bindCat(): void {
     go('home');
   });
 
-  // 摸摸头：点猫咪有反应
+  // 摸摸头：猫咪开心蹦跳
   app.querySelector<HTMLImageElement>('#cat-img')?.addEventListener('click', (ev) => {
     const img = ev.currentTarget as HTMLImageElement;
-    img.classList.remove('eat');
-    void img.offsetWidth;
-    img.classList.add('eat');
-    A.burst(img, { emoji: '💛', count: 4 });
-    A.blip(990, 0.1, 'triangle');
+    M.play(img, 'happy');
     A.haptic(10);
     showBubble(pickLine());
   });
@@ -153,6 +152,14 @@ function bindCat(): void {
       btn.textContent = old;
     }
   });
+
+  // 常驻姿态 + 待机动作循环 —— 让猫咪"一直在动"
+  const bigImg = app.querySelector<HTMLImageElement>('#cat-img');
+  if (bigImg) M.setPose(bigImg, state.kibble >= CONFIG.PER_FEED ? 'sit' : 'lie');
+  M.startIdleLoop(
+    () => app.querySelector<HTMLImageElement>('#cat-img'),
+    () => (state.kibble >= CONFIG.PER_FEED ? 'happy' : 'hungry')
+  );
 }
 
 /* ---------- 投喂：完整反馈序列 ---------- */
@@ -189,13 +196,9 @@ async function doFeed(): Promise<void> {
   const fresh = Ach.sync(state);
   if (fresh.length) L.saveState(state);
 
-  // ④ 颗粒抵达：进食反应（挤压 + 爱心 + 上行音 + 台词）
+  // ④ 颗粒抵达：进食反应（低头 → 咀嚼 → 抬头，爱心上浮 + 台词）
   window.setTimeout(() => {
-    img.classList.remove('eat');
-    void img.offsetWidth;
-    img.classList.add('eat');
-    A.burst(img, { emoji: '💛', count: 6 });
-    A.blip(1046, 0.13, 'triangle');
+    M.play(img, 'eat');
     A.haptic([10, 25]);
     showBubble(pickLine());
   }, 540);
